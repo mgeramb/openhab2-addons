@@ -21,6 +21,8 @@ import org.eclipse.smarthome.core.thing.binding.ThingHandlerFactory;
 import org.openhab.binding.amazonechocontrol.handler.AccountHandler;
 import org.openhab.binding.amazonechocontrol.handler.EchoHandler;
 import org.openhab.binding.amazonechocontrol.handler.FlashBriefingProfileHandler;
+import org.openhab.binding.amazonechocontrol.handler.SmartHomeDimmerHandler;
+import org.openhab.binding.amazonechocontrol.handler.SmartHomeSwitchHandler;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.http.HttpService;
@@ -57,6 +59,12 @@ public class AmazonEchoControlHandlerFactory extends BaseThingHandlerFactory {
         }
         if (thingTypeUID.equals(THING_TYPE_FLASH_BRIEFING_PROFILE)) {
             return new FlashBriefingProfileHandler(thing);
+        }
+        if (thingTypeUID.equals(THING_TYPE_SMART_HOME_DIMMER)) {
+            return new SmartHomeDimmerHandler(thing);
+        }
+        if (thingTypeUID.equals(THING_TYPE_SMART_HOME_SWITCH)) {
+            return new SmartHomeSwitchHandler(thing);
         }
         if (SUPPORTED_THING_TYPES_UIDS.contains(thingTypeUID)) {
             return new EchoHandler(thing);
