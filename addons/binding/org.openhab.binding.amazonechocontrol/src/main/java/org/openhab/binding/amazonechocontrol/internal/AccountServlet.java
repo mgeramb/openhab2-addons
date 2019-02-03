@@ -370,6 +370,9 @@ public class AccountServlet extends HttpServlet {
         html.append(" | <a href='" + servletUrl + "/newdevice' >");
         html.append(StringEscapeUtils.escapeHtml("Logout and create new device id"));
         html.append("</a>");
+        // customer id
+        html.append("<br>Customer Id: ");
+        html.append(StringEscapeUtils.escapeHtml(connection.getCustomerId()));
         // device name
         html.append("<br>App name: ");
         html.append(StringEscapeUtils.escapeHtml(connection.getDeviceName()));

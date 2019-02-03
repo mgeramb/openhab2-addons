@@ -16,6 +16,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
@@ -51,10 +52,13 @@ import org.eclipse.smarthome.core.thing.ThingUID;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
+import org.eclipse.smarthome.core.types.State;
 import org.eclipse.smarthome.core.types.UnDefType;
 import org.openhab.binding.amazonechocontrol.internal.Connection;
 import org.openhab.binding.amazonechocontrol.internal.ConnectionException;
 import org.openhab.binding.amazonechocontrol.internal.HttpException;
+import org.openhab.binding.amazonechocontrol.internal.channelhandler.ChannelHandler;
+import org.openhab.binding.amazonechocontrol.internal.channelhandler.ChannelHandlerAnnouncement;
 import org.openhab.binding.amazonechocontrol.internal.jsons.JsonActivities.Activity;
 import org.openhab.binding.amazonechocontrol.internal.jsons.JsonActivities.Activity.Description;
 import org.openhab.binding.amazonechocontrol.internal.jsons.JsonAscendingAlarm.AscendingAlarmModel;
@@ -90,7 +94,7 @@ import com.google.gson.Gson;
  * @author Michael Geramb - Initial contribution
  */
 @NonNullByDefault
-public class EchoHandler extends BaseThingHandler {
+public class EchoHandler extends BaseThingHandler implements IAmazonThingHandler {
 
     private final Logger logger = LoggerFactory.getLogger(EchoHandler.class);
     private Gson gson = new Gson();
@@ -124,6 +128,7 @@ public class EchoHandler extends BaseThingHandler {
     private @Nullable JsonPlaylists playLists;
     private @Nullable JsonNotificationSound @Nullable [] alarmSounds;
     private @Nullable List<JsonMusicProvider> musicProviders;
+    private List<ChannelHandler> channelHandlers = new ArrayList<ChannelHandler>();
 
     private @Nullable JsonNotificationResponse currentNotification;
     private @Nullable ScheduledFuture<?> currentNotifcationUpdateTimer;
@@ -134,6 +139,7 @@ public class EchoHandler extends BaseThingHandler {
 
     public EchoHandler(Thing thing) {
         super(thing);
+        channelHandlers.add(new ChannelHandlerAnnouncement(this));
     }
 
     @Override
@@ -257,8 +263,14 @@ public class EchoHandler extends BaseThingHandler {
                 return;
             }
 
-            // Player commands
             String channelId = channelUID.getId();
+            for (ChannelHandler channelHandler : channelHandlers) {
+                if (channelHandler.tryHandleCommand(device, connection, channelId, command)) {
+                    return;
+                }
+            }
+
+            // Player commands
             if (channelId.equals(CHANNEL_PLAYER)) {
                 if (command == PlayPauseType.PAUSE || command == OnOffType.OFF) {
                     connection.command(device, "{\"type\":\"PauseCommand\"}");
@@ -719,7 +731,7 @@ public class EchoHandler extends BaseThingHandler {
             this.ignoreVolumeChange = scheduler.schedule(this::stopIgnoreVolumeChange, 2000, TimeUnit.MILLISECONDS);
         }
         if (text.startsWith("<speak>") && text.endsWith("</speak>")) {
-            connection.sendAnnouncement(device, text, null, textToSpeechVolume, lastKnownVolume);
+            connection.sendAnnouncement(device, text, null, null, textToSpeechVolume, lastKnownVolume);
         } else {
             connection.textToSpeech(device, text, textToSpeechVolume, lastKnownVolume);
         }
@@ -1298,7 +1310,7 @@ public class EchoHandler extends BaseThingHandler {
                         if (StringUtils.isNotBlank(notification.recurringPattern) && alarmTime.isBefore(now)) {
                             continue; // Ignore recurring entry if alarm time is before now
                         }
-                        if (nextMusicAlarm == null || alarmTime.isBefore(nextAlarm)) {
+                        if (nextMusicAlarm == null || alarmTime.isBefore(nextMusicAlarm)) {
                             nextMusicAlarm = alarmTime;
                         }
                     }
@@ -1311,5 +1323,10 @@ public class EchoHandler extends BaseThingHandler {
         updateState(CHANNEL_NEXT_MUSIC_ALARM,
                 nextMusicAlarm == null ? UnDefType.UNDEF : new DateTimeType(nextMusicAlarm));
         updateState(CHANNEL_NEXT_TIMER, nextTimer == null ? UnDefType.UNDEF : new DateTimeType(nextTimer));
+    }
+
+    @Override
+    public void updateChannelState(String channelId, State state) {
+        updateState(channelId, state);
     }
 }

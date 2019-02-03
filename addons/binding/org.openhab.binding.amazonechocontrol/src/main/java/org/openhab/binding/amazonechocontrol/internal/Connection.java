@@ -232,6 +232,14 @@ public class Connection {
         return deviceName;
     }
 
+    public String getCustomerId() {
+        String customerId = this.accountCustomerId;
+        if (customerId == null) {
+            return "Unknown";
+        }
+        return customerId;
+    }
+
     public String serializeLoginData() {
         Date loginTime = this.loginTime;
         if (refreshToken == null || loginTime == null) {
@@ -1021,8 +1029,8 @@ public class Connection {
         executeSequenceCommand(null, "Alexa.Notifications.SendMobilePush", parameters);
     }
 
-    public void sendAnnouncement(Device device, String text, @Nullable String title, int ttsVolume, int standardVolume)
-            throws IOException, URISyntaxException {
+    public void sendAnnouncement(Device device, String text, @Nullable String bodyText, @Nullable String title,
+            int ttsVolume, int standardVolume) throws IOException, URISyntaxException {
         Map<String, Object> parameters = new Hashtable<String, Object>();
         parameters.put("expireAfter", "PT5S");
         JsonAnnouncementContent[] contentArray = new JsonAnnouncementContent[1];
@@ -1032,14 +1040,23 @@ public class Connection {
         } else {
             content.display.title = title;
         }
-        content.display.body = text;
+        boolean isSSML = false;
         if (text.startsWith("<speak>") && text.endsWith("</speak>")) {
+            isSSML = true;
             content.speak.type = "ssml";
-            String plainText = Jsoup.parse(text).text();
-            content.display.body = plainText;
-        } else {
-            content.display.body = text;
+
         }
+        String body = bodyText;
+        if (body == null) {
+            content.display.body = text;
+            if (isSSML) {
+                String plainText = Jsoup.parse(text).text();
+                body = plainText;
+            } else {
+                body = text;
+            }
+        }
+        content.display.body = body;
         content.speak.value = text;
 
         contentArray[0] = content;

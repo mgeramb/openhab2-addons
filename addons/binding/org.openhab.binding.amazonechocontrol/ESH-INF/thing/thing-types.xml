@@ -89,6 +89,7 @@
 			<channel id="amazonMusicTrackId" typeId="amazonMusicTrackId" />
 			<channel id="amazonMusicPlayListId" typeId="amazonMusicPlayListId" />
 			<channel id="amazonMusic" typeId="amazonMusic" />
+<!--             <channel id="announcement" typeId="announcement" /> -->
 			<channel id="textToSpeech" typeId="textToSpeech" />
 			<channel id="textToSpeechVolume" typeId="textToSpeechVolume" />
 			<channel id="remind" typeId="remind" />
@@ -142,6 +143,7 @@
 			<channel id="amazonMusicTrackId" typeId="amazonMusicTrackId" />
 			<channel id="amazonMusicPlayListId" typeId="amazonMusicPlayListId" />
 			<channel id="amazonMusic" typeId="amazonMusic" />
+<!--             <channel id="announcement" typeId="announcement" /> -->
 			<channel id="textToSpeech" typeId="textToSpeech" />
 			<channel id="textToSpeechVolume" typeId="textToSpeechVolume" />
 			<channel id="remind" typeId="remind" />
@@ -365,6 +367,11 @@
 		<label>Music Voice Command</label>
 		<description>Voice command as text. E.g. 'Yesterday from the Beatles' (Write only)</description>
 	</channel-type>
+    <channel-type id="announcement" advanced="true">
+        <item-type>String</item-type>
+        <label>Announcement</label>
+        <description>Display the announcement message on the display (Write only). </description>
+    </channel-type>
 	<channel-type id="textToSpeech" advanced="true">
 		<item-type>String</item-type>
 		<label>Speak</label>
