@@ -297,9 +297,7 @@ public class AccountServlet extends HttpServlet {
                     Device device = account.findDeviceJson(serialNumber);
                     if (device != null) {
                         Thing thing = account.findThingBySerialNumber(device.serialNumber);
-                        if (thing != null) {
-                            handleIds(resp, connection, device, thing);
-                        }
+                        handleIds(resp, connection, device, thing);
                         return;
                     }
                 }
@@ -408,7 +406,9 @@ public class AccountServlet extends HttpServlet {
                         + URLEncoder.encode(device.serialNumber, "UTF8") + "'>"
                         + StringEscapeUtils.escapeHtml(accountHandler.getLabel()) + "</a>");
             } else {
-                html.append("Not defined");
+                html.append("<a href='" + servletUrl + "/ids/?serialNumber="
+                        + URLEncoder.encode(device.serialNumber, "UTF8") + "'>"
+                        + StringEscapeUtils.escapeHtml("Not defined") + "</a>");
             }
             html.append("</td><td>");
             html.append(StringEscapeUtils.escapeHtml(nullReplacement(device.deviceFamily)));
@@ -466,16 +466,34 @@ public class AccountServlet extends HttpServlet {
         }
     }
 
-    private void handleIds(HttpServletResponse resp, Connection connection, Device device, Thing thing)
+    private void handleIds(HttpServletResponse resp, Connection connection, Device device, @Nullable Thing thing)
             throws IOException, URISyntaxException {
-        StringBuilder html = createPageStart("Channel Options - " + thing.getLabel());
-
+        StringBuilder html;
+        if (thing != null) {
+            html = createPageStart("Channel Options - " + thing.getLabel());
+        } else {
+            html = createPageStart("Device Information - No thing defined");
+        }
         renderBluetoothMacChannel(connection, device, html);
         renderAmazonMusicPlaylistIdChannel(connection, device, html);
         renderPlayAlarmSoundChannel(connection, device, html);
         renderMusicProviderIdChannel(connection, html);
-
+        renderCapabilities(connection, device, html);
         createPageEndAndSent(resp, html);
+    }
+
+    private void renderCapabilities(Connection connection, Device device, StringBuilder html) {
+        html.append("<h2>Capabilities</h2>");
+        html.append("<table><tr><th align='left'>Name</th></tr>");
+        String[] capabilities = device.capabilities;
+        if (capabilities != null) {
+            for (String capability : capabilities) {
+                html.append("<tr><td>");
+                html.append(StringEscapeUtils.escapeHtml(capability));
+                html.append("</td></tr>");
+            }
+        }
+        html.append("</table>");
     }
 
     private void renderMusicProviderIdChannel(Connection connection, StringBuilder html) {
