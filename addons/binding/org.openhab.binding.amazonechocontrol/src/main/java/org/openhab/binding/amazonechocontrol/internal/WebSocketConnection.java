@@ -390,6 +390,7 @@ public class WebSocketConnection {
                         if (pushCommand != null) {
                             webSocketCommandHandler.webSocketCommandReceived(pushCommand);
                         }
+                        logger.debug("Message handled: {}", message.content.payload);
                         return;
                     }
                 } catch (Exception e) {

@@ -728,6 +728,8 @@ public class AccountHandler extends BaseBridgeHandler implements IWebSocketComma
         EchoHandler echoHandler = findEchoHandlerBySerialNumber(dopplerId.deviceSerialNumber);
         if (echoHandler != null) {
             echoHandler.handlePushCommand(command, payload);
+        } else {
+            logger.debug("No thing found for serial {}", dopplerId.deviceSerialNumber);
         }
     }
 
