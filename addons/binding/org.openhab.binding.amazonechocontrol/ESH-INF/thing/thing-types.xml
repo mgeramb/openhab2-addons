@@ -89,7 +89,7 @@
 			<channel id="amazonMusicTrackId" typeId="amazonMusicTrackId" />
 			<channel id="amazonMusicPlayListId" typeId="amazonMusicPlayListId" />
 			<channel id="amazonMusic" typeId="amazonMusic" />
-<!--             <channel id="announcement" typeId="announcement" /> -->
+			<channel id="announcement" typeId="announcement" />
 			<channel id="textToSpeech" typeId="textToSpeech" />
 			<channel id="textToSpeechVolume" typeId="textToSpeechVolume" />
 			<channel id="remind" typeId="remind" />
@@ -143,7 +143,7 @@
 			<channel id="amazonMusicTrackId" typeId="amazonMusicTrackId" />
 			<channel id="amazonMusicPlayListId" typeId="amazonMusicPlayListId" />
 			<channel id="amazonMusic" typeId="amazonMusic" />
-<!--             <channel id="announcement" typeId="announcement" /> -->
+            <channel id="announcement" typeId="announcement" />
 			<channel id="textToSpeech" typeId="textToSpeech" />
 			<channel id="textToSpeechVolume" typeId="textToSpeechVolume" />
 			<channel id="remind" typeId="remind" />
@@ -370,7 +370,7 @@
     <channel-type id="announcement" advanced="true">
         <item-type>String</item-type>
         <label>Announcement</label>
-        <description>Display the announcement message on the display (Write only). </description>
+        <description>Display the announcement message on the display (Write only). See in the tutorial section of the binding description to learn how it's possible to set the title and turn off the sound.</description>
     </channel-type>
 	<channel-type id="textToSpeech" advanced="true">
 		<item-type>String</item-type>

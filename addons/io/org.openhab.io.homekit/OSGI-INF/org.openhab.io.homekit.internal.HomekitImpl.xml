@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.2.0" activate="activate" configuration-pid="org.openhab.homekit" deactivate="deactivate" immediate="true" modified="modified" name="org.openhab.io.homekit.internal.HomekitImpl">
+   <property name="service.pid" value="org.openhab.homekit"/>
+   <property name="service.config.description.uri" value="io:homekit"/>
+   <property name="service.config.category" value="io"/>
+   <property name="service.config.label" value="HomeKit Integration"/>
+   <property name="port" type="Integer" value="9123"/>
+   <service>
+      <provide interface="org.openhab.io.homekit.Homekit"/>
+   </service>
+   <reference bind="setItemRegistry" interface="org.eclipse.smarthome.core.items.ItemRegistry" name="ItemRegistry" unbind="unsetItemRegistry"/>
+   <reference bind="setStorageService" interface="org.eclipse.smarthome.core.storage.StorageService" name="StorageService" unbind="unsetStorageService"/>
+   <implementation class="org.openhab.io.homekit.internal.HomekitImpl"/>
+</scr:component>

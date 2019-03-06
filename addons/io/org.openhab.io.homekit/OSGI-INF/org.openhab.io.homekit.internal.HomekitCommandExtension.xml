@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name="org.openhab.io.homekit.internal.HomekitCommandExtension">
+   <service>
+      <provide interface="org.eclipse.smarthome.io.console.extensions.ConsoleCommandExtension"/>
+   </service>
+   <reference bind="setHomekit" interface="org.openhab.io.homekit.Homekit" name="Homekit" unbind="unsetHomekit"/>
+   <reference bind="setStorageService" interface="org.eclipse.smarthome.core.storage.StorageService" name="StorageService" unbind="unsetStorageService"/>
+   <implementation class="org.openhab.io.homekit.internal.HomekitCommandExtension"/>
+</scr:component>
