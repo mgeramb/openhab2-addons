@@ -371,6 +371,9 @@ public class AccountServlet extends HttpServlet {
         // customer id
         html.append("<br>Customer Id: ");
         html.append(StringEscapeUtils.escapeHtml(connection.getCustomerId()));
+        // customer name
+        html.append("<br>Customer Name: ");
+        html.append(StringEscapeUtils.escapeHtml(connection.getCustomerName()));
         // device name
         html.append("<br>App name: ");
         html.append(StringEscapeUtils.escapeHtml(connection.getDeviceName()));
@@ -390,7 +393,7 @@ public class AccountServlet extends HttpServlet {
 
         // device list
         html.append(
-                "<table><tr><th align='left'>Device</th><th align='left'>Serial Number</th><th align='left'>State</th><th align='left'>Thing</th><th align='left'>Family</th><th align='left'>Type</th></tr>");
+                "<table><tr><th align='left'>Device</th><th align='left'>Serial Number</th><th align='left'>State</th><th align='left'>Thing</th><th align='left'>Family</th><th align='left'>Type</th><th align='left'>Customer Id</th></tr>");
         for (Device device : this.account.getLastKnownDevices()) {
 
             html.append("<tr><td>");
@@ -415,7 +418,9 @@ public class AccountServlet extends HttpServlet {
             html.append("</td><td>");
             html.append(StringEscapeUtils.escapeHtml(nullReplacement(device.deviceType)));
             html.append("</td><td>");
-            html.append("</td></tr>");
+            html.append(StringEscapeUtils.escapeHtml(nullReplacement(device.deviceOwnerCustomerId)));
+            html.append("</td>");
+            html.append("</tr>");
         }
         html.append("</table>");
         createPageEndAndSent(resp, html);
@@ -620,7 +625,7 @@ public class AccountServlet extends HttpServlet {
                 headers.put("Referer", referer);
             }
 
-            urlConnection = connection.makeRequest(verb, url, postData, json, false, headers);
+            urlConnection = connection.makeRequest(verb, url, postData, json, false, headers, false);
             if (urlConnection.getResponseCode() == 302) {
                 {
                     String location = urlConnection.getHeaderField("location");
