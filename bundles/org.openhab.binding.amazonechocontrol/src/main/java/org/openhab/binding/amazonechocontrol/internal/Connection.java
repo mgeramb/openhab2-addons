@@ -119,6 +119,7 @@ import com.google.gson.JsonSyntaxException;
  * handling of the commands
  *
  * @author Michael Geramb - Initial contribution
+ * @author Lukas Knoeller - Contributor
  */
 @NonNullByDefault
 public class Connection {
@@ -893,8 +894,11 @@ public class Connection {
             ArrayList<SmartHomeDevice> smartDevices = new ArrayList<>();
 
             for (int i = 0; i < smartHomeDeviceArray.size(); ++i) {
-                if (smartHomeDeviceArray.get(i).groupIdentity != null && group.applianceGroupIdentifier.value != null) {
-                    if (smartHomeDeviceArray.get(i).groupIdentity.equals(group.applianceGroupIdentifier.value)) {
+                if (smartHomeDeviceArray.get(i).groupIdentity != null && group.applianceGroupIdentifier != null) {
+                    String groupIdentity = smartHomeDeviceArray.get(i).groupIdentity;
+                    @SuppressWarnings("null")
+                    String applianceGroupIdentifier = group.applianceGroupIdentifier.value;
+                    if (groupIdentity != null && groupIdentity.equals(applianceGroupIdentifier)) {
                         smartDevices.add(smartHomeDeviceArray.get(i));
                         if (group.applianceGroupName != null) {
                             alias[0] = new JsonSmartHomeDeviceAlias(group.applianceGroupName, true);

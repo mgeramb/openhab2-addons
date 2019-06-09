@@ -97,6 +97,7 @@ public class SmartHomeDeviceHandler extends BaseThingHandler {
                                 String state = null;
                                 int brightness = -1;
                                 String color = null;
+
                                 connection = accountHandler.findConnection();
                                 if (thing.getProperties().keySet().contains(DEVICE_PROPERTY_LIGHT_SUBDEVICE + 0)) {
                                     state = connection.getLightGroupState(thing);
