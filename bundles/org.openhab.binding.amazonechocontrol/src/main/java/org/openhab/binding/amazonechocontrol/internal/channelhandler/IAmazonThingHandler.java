@@ -12,8 +12,13 @@
  */
 package org.openhab.binding.amazonechocontrol.internal.channelhandler;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
+
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.core.types.State;
+import org.openhab.binding.amazonechocontrol.internal.jsons.JsonDevices.Device;
 
 /**
  * The {@link IAmazonThingHandler} is used from ChannelHandlers to communicate with the thing
@@ -23,4 +28,8 @@ import org.eclipse.smarthome.core.types.State;
 @NonNullByDefault
 public interface IAmazonThingHandler {
     void updateChannelState(String channelId, State state);
+
+    void startAnnouncment(Device device, String text, String bodyText, String title, @Nullable Integer volume)
+            throws IOException, URISyntaxException;
+
 }
