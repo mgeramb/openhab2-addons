@@ -10,17 +10,24 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.amazonechocontrol.internal.channelhandler;
+package org.openhab.binding.amazonechocontrol.internal.smarthome;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
-import org.eclipse.smarthome.core.types.State;
+import org.eclipse.jdt.annotation.Nullable;
 
 /**
- * The {@link IAmazonThingHandler} is used from ChannelHandlers to communicate with the thing
- *
- * @author Michael Geramb - Initial contribution
+ * @author Lukas Knoeller
  */
 @NonNullByDefault
-public interface IAmazonThingHandler {
-    void updateChannelState(String channelId, State state);
+public class JsonSmartHomeDeviceAlias {
+    public @Nullable String friendlyName;
+    public @Nullable Boolean enabled;
+
+    public JsonSmartHomeDeviceAlias(String friendlyName, Boolean enabled) {
+        this.friendlyName = friendlyName;
+        this.enabled = enabled;
+    }
+
+    public JsonSmartHomeDeviceAlias() {
+    }
 }

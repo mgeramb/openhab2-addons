@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -73,6 +74,7 @@ import org.openhab.binding.amazonechocontrol.internal.jsons.JsonExchangeTokenRes
 import org.openhab.binding.amazonechocontrol.internal.jsons.JsonFeed;
 import org.openhab.binding.amazonechocontrol.internal.jsons.JsonMediaState;
 import org.openhab.binding.amazonechocontrol.internal.jsons.JsonMusicProvider;
+import org.openhab.binding.amazonechocontrol.internal.jsons.JsonNetworkDetails;
 import org.openhab.binding.amazonechocontrol.internal.jsons.JsonNotificationRequest;
 import org.openhab.binding.amazonechocontrol.internal.jsons.JsonNotificationResponse;
 import org.openhab.binding.amazonechocontrol.internal.jsons.JsonNotificationSound;
@@ -96,12 +98,16 @@ import org.openhab.binding.amazonechocontrol.internal.jsons.JsonUsersMeResponse;
 import org.openhab.binding.amazonechocontrol.internal.jsons.JsonWakeWords;
 import org.openhab.binding.amazonechocontrol.internal.jsons.JsonWakeWords.WakeWord;
 import org.openhab.binding.amazonechocontrol.internal.jsons.JsonWebSiteCookie;
+import org.openhab.binding.amazonechocontrol.internal.jsons.SmartHomeBaseDevice;
+import org.openhab.binding.amazonechocontrol.internal.smarthome.JsonSmartHomeDevices.SmartHomeDevice;
+import org.openhab.binding.amazonechocontrol.internal.smarthome.JsonSmartHomeGroups.SmartHomeGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSyntaxException;
@@ -910,6 +916,45 @@ public class Connection {
         return new WakeWord[0];
     }
 
+    public List<SmartHomeBaseDevice> getSmarthomeDeviceList() throws IOException, URISyntaxException {
+        try {
+            String json = makeRequestAndReturnString(alexaServer + "/api/phoenix");
+            logger.debug("getSmartHomeDevices result: {}", json);
+
+            JsonNetworkDetails networkDetails = parseJson(json, JsonNetworkDetails.class);
+            Object jsonObject = gson.fromJson(networkDetails.networkDetail, Object.class);
+            List<SmartHomeBaseDevice> result = new ArrayList<>();
+            searchSmartHomeDevicesRecursive(jsonObject, result);
+
+            return result;
+        } catch (Exception e) {
+            logger.warn("getSmartHomeDevices fails: {}", e.getMessage());
+            throw e;
+        }
+    }
+
+    private void searchSmartHomeDevicesRecursive(@Nullable Object jsonNode, List<SmartHomeBaseDevice> devices) {
+        if (jsonNode instanceof Map) {
+            @SuppressWarnings("rawtypes")
+            Map map = (Map) jsonNode;
+            if (map.containsKey("entityId") && map.containsKey("friendlyName") && map.containsKey("actions")) {
+                // device node found, create type element and add it to the results
+                JsonElement element = gson.toJsonTree(jsonNode);
+                SmartHomeDevice shd = parseJson(element.toString(), SmartHomeDevice.class);
+                devices.add(shd);
+            } else if (map.containsKey("applianceGroupName")) {
+                JsonElement element = gson.toJsonTree(jsonNode);
+                SmartHomeGroup shg = parseJson(element.toString(), SmartHomeGroup.class);
+                devices.add(shg);
+            } else {
+                for (Object key : map.keySet()) {
+                    Object value = map.get(key);
+                    searchSmartHomeDevicesRecursive(value, devices);
+                }
+            }
+        }
+    }
+
     public List<Device> getDeviceList() throws IOException, URISyntaxException {
         String json = getDeviceListJson();
         JsonDevices devices = parseJson(json, JsonDevices.class);
@@ -923,6 +968,177 @@ public class Connection {
     public String getDeviceListJson() throws IOException, URISyntaxException {
         String json = makeRequestAndReturnString(alexaServer + "/api/devices-v2/device?cached=false");
         return json;
+    }
+
+    // public int getLightGroupBrightness(Thing device) throws IOException, URISyntaxException {
+    // Map<String, String> props = device.getProperties();
+    // List<Float> states = new ArrayList<>();
+    // if (props.containsKey(DEVICE_PROPERTY_APPLIANCE_ID + "0")) {
+    // int counter = 0;
+    // for (String key : props.keySet()) {
+    // if (key.contains(DEVICE_PROPERTY_APPLIANCE_ID + counter)) {
+    // JsonArray capabilities = this.getBulbCapabilities(props.get(key));
+    //
+    // Float state = null;
+    // for (JsonElement capability : capabilities) {
+    // JsonObject capabilityObject = capability.getAsJsonObject();
+    // if (capabilityObject.get("namespace").getAsString().equals("Alexa.BrightnessController")) {
+    // state = capabilityObject.get("value").getAsFloat();
+    // states.add(state);
+    // }
+    // }
+    // ++counter;
+    // }
+    // }
+    //
+    // if (states.size() > 0) {
+    // return Collections.max(states).intValue();
+    // }
+    // }
+    //
+    // return -1;
+    // }
+
+    // public String getBulbColor(Thing device) throws IOException, URISyntaxException {
+    // Map<String, String> props = device.getProperties();
+    // String applianceId = props.get(DEVICE_PROPERTY_APPLIANCE_ID);
+    //
+    // String color = null;
+    // JsonArray capabilities = this.getBulbCapabilities(applianceId);
+    //
+    // for (JsonElement capability : capabilities) {
+    // JsonObject capabilityObject = capability.getAsJsonObject();
+    // if (capabilityObject.get("namespace").getAsString().equals("Alexa.ColorPropertiesController")) {
+    // try {
+    // color = capabilityObject.getAsJsonObject().get("value").getAsJsonObject().get("name").getAsString();
+    // } catch (Exception e) {
+    // logger.debug("getting bulb color failed {}", e);
+    // }
+    // }
+    // }
+    // if (color != null) {
+    // return color;
+    // } else {
+    // throw new IOException();
+    // }
+    // }
+
+    // public int getBulbBrightness(Thing device) throws IOException, URISyntaxException {
+    // Map<String, String> props = device.getProperties();
+    // String applianceId = props.get(DEVICE_PROPERTY_APPLIANCE_ID);
+    // JsonArray capabilities = this.getBulbCapabilities(applianceId);
+    //
+    // int brightness = -1;
+    // for (JsonElement capability : capabilities) {
+    // JsonObject capabilityObject = capability.getAsJsonObject();
+    // if (INTERFACE_BRIGHTNESS.equals(capabilityObject.get("namespace").getAsString())) {
+    // brightness = capabilityObject.get("value").getAsInt();
+    // }
+    // }
+    // if (brightness == -1) {
+    // return 100;
+    // }
+    // return brightness;
+    // }
+
+    // public String getLightGroupState(Thing device) throws IOException, URISyntaxException {
+    // Map<String, String> props = device.getProperties();
+    // List<String> states = new ArrayList<>();
+    // if (props.containsKey(DEVICE_PROPERTY_APPLIANCE_ID + "0")) {
+    // int counter = 0;
+    // for (String key : props.keySet()) {
+    // if (key.contains(DEVICE_PROPERTY_APPLIANCE_ID + counter)) {
+    // JsonArray capabilities = this.getBulbCapabilities(props.get(key));
+    // String state = null;
+    // for (JsonElement capability : capabilities) {
+    // JsonObject capabilityObject = capability.getAsJsonObject();
+    // if (INTERFACE_POWER.equals(capabilityObject.get("namespace").getAsString())) {
+    // state = capabilityObject.get("value").getAsString();
+    // states.add(state);
+    // }
+    // }
+    // ++counter;
+    // }
+    // }
+    // if (states.contains("ON")) {
+    // return "ON";
+    // } else {
+    // return "OFF";
+    // }
+    // }
+    // throw new IOException();
+    // }
+    //
+    // public String getBulbState(Thing device) throws IOException, URISyntaxException {
+    // Map<String, String> props = device.getProperties();
+    // String applianceId = props.get(DEVICE_PROPERTY_APPLIANCE_ID);
+    //
+    // String state = null;
+    // JsonArray capabilities = this.getBulbCapabilities(applianceId);
+    //
+    // for (JsonElement capability : capabilities) {
+    // JsonObject capabilityObject = capability.getAsJsonObject();
+    // if (capabilityObject.get("namespace").getAsString().equals(INTERFACE_POWER)) {
+    // try {
+    // state = capabilityObject.get("value").getAsString();
+    // } catch (Exception e) {
+    // logger.error("getting bulb state failed {}", e);
+    // }
+    // }
+    // }
+    // if (state == null) {
+    // throw new IOException();
+    // }
+    // return state;
+    // }
+
+    // public JsonArray getBulbCapabilities(String applianceId) throws IOException, URISyntaxException {
+    // String json = this.getSmartHomeDeviceStateJson(applianceId);
+    // JsonElement jobject = new JsonParser().parse(json);
+    // JsonArray capabilities = null;
+    //
+    // try {
+    // capabilities = jobject.getAsJsonObject().get("deviceStates").getAsJsonArray().get(0).getAsJsonObject()
+    // .get("capabilityStates").getAsJsonArray();
+    // } catch (Exception e) {
+    // logger.debug("getting capabilities failed {}", e);
+    // }
+    //
+    // if (capabilities != null) {
+    // return capabilities;
+    // }
+    //
+    // throw new IOException();
+    // }
+
+    public Map<String, JsonArray> getSmartHomeDeviceStatesJson(Set<String> applianceIds)
+            throws IOException, URISyntaxException {
+
+        JsonObject requestObject = new JsonObject();
+        JsonArray stateRequests = new JsonArray();
+        for (String applianceId : applianceIds) {
+            JsonObject stateRequest = new JsonObject();
+            stateRequest.addProperty("entityId", applianceId);
+            stateRequest.addProperty("entityType", "APPLIANCE");
+            stateRequests.add(stateRequest);
+        }
+        requestObject.add("stateRequests", stateRequests);
+        String requestBody = requestObject.toString();
+        String json = makeRequestAndReturnString("POST", alexaServer + "/api/phoenix/state", requestBody, true, null);
+
+        JsonObject responseObject = this.gson.fromJson(json, JsonObject.class);
+        JsonArray deviceStates = (JsonArray) responseObject.get("deviceStates");
+        Map<String, JsonArray> result = new HashMap<String, JsonArray>();
+        for (JsonElement deviceState : deviceStates) {
+            JsonObject deviceStateObject = deviceState.getAsJsonObject();
+            JsonObject entity = deviceStateObject.get("entity").getAsJsonObject();
+            String applicanceId = entity.get("entityId").getAsString();
+            JsonElement capabilityState = deviceStateObject.get("capabilityStates");
+            if (capabilityState != null && capabilityState.isJsonArray()) {
+                result.put(applicanceId, capabilityState.getAsJsonArray());
+            }
+        }
+        return result;
     }
 
     public JsonPlayerState getPlayer(Device device) throws IOException, URISyntaxException {
@@ -980,6 +1196,64 @@ public class Connection {
         String url = alexaServer + "/api/np/command?deviceSerialNumber=" + device.serialNumber + "&deviceType="
                 + device.deviceType;
         makeRequest("POST", url, command, true, true, null, 0);
+    }
+
+    public void smartHomeCommand(String entityId, String action) throws IOException {
+        smartHomeCommand(entityId, action, null, null);
+    }
+
+    public void smartHomeCommand(String entityId, String action, @Nullable String property, @Nullable Object value)
+            throws IOException {
+        String url = alexaServer + "/api/phoenix/state";
+
+        JsonObject json = new JsonObject();
+        JsonArray controlRequests = new JsonArray();
+        JsonObject controlRequest = new JsonObject();
+        controlRequest.addProperty("entityId", entityId);
+        controlRequest.addProperty("entityType", "APPLIANCE");
+        JsonObject parameters = new JsonObject();
+        parameters.addProperty("action", action);
+        if (property != null) {
+            if (value instanceof Boolean) {
+                parameters.addProperty(property, (boolean) value);
+            } else if (value instanceof String) {
+                parameters.addProperty(property, (String) value);
+            } else if (value instanceof Number) {
+                parameters.addProperty(property, (Number) value);
+            } else if (value instanceof Character) {
+                parameters.addProperty(property, (Character) value);
+            } else if (value instanceof JsonElement) {
+                parameters.add(property, (JsonElement) value);
+            }
+        }
+        controlRequest.add("parameters", parameters);
+        controlRequests.add(controlRequest);
+        json.add("controlRequests", controlRequests);
+
+        String requestBody = json.toString();
+        try {
+            String resultBody = makeRequestAndReturnString("PUT", url, requestBody, true, null);
+            logger.debug(resultBody);
+            JsonObject result = parseJson(resultBody, JsonObject.class);
+            if (result != null) {
+                JsonElement errors = result.get("errors");
+                if (errors != null && errors.isJsonArray()) {
+                    JsonArray errorList = errors.getAsJsonArray();
+                    if (errorList.size() > 0) {
+                        logger.info("Smart home device command failed.");
+                        logger.info("Request:");
+                        logger.info(requestBody);
+                        logger.info("Answer:");
+                        for (JsonElement error : errorList) {
+                            logger.info(error.toString());
+                        }
+                    }
+                }
+            }
+
+        } catch (URISyntaxException e) {
+            logger.info("Wrong url {}: {}", url, e);
+        }
     }
 
     public void notificationVolume(Device device, int volume) throws IOException, URISyntaxException {

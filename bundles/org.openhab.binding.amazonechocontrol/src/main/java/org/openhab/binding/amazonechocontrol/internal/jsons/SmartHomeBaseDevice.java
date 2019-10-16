@@ -10,17 +10,21 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.amazonechocontrol.internal.channelhandler;
+
+package org.openhab.binding.amazonechocontrol.internal.jsons;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
-import org.eclipse.smarthome.core.types.State;
+import org.eclipse.jdt.annotation.Nullable;
 
 /**
- * The {@link IAmazonThingHandler} is used from ChannelHandlers to communicate with the thing
+ * The {@link SmartHomeBaseDevice} is the base interface for all smart home device json nodes
  *
  * @author Michael Geramb - Initial contribution
  */
 @NonNullByDefault
-public interface IAmazonThingHandler {
-    void updateChannelState(String channelId, State state);
+public interface SmartHomeBaseDevice {
+    public @Nullable String findId();
+
+    public boolean isGroup();
+
 }
